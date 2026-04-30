@@ -39,6 +39,15 @@ class AlertThrottle:
         self._last_alert[job_name] = now
         self._alert_counts.setdefault(job_name, []).append(now)
 
+    def reset(self, job_name: str) -> None:
+        """Clear throttle history for the given job.
+
+        Useful when a job recovers and future alerts should not be suppressed
+        due to prior failures.
+        """
+        self._last_alert.pop(job_name, None)
+        self._alert_counts.pop(job_name, None)
+
     def _interval_ok(self, job_name: str, now: datetime) -> bool:
         last = self._last_alert.get(job_name)
         if last is None:
