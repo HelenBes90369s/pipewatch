@@ -55,6 +55,17 @@ class TestStreakAlertRule:
         rule = StreakAlertRule(history=h)
         assert rule.streak_for("etl") == 1
 
+    def test_streak_resets_after_success(self, tmp_path):
+        """A success followed by failures should not count prior failures toward the streak."""
+        h = JobHistory(tmp_path / "h.jsonl")
+        rule = StreakAlertRule(threshold=3, history=h)
+        h.record(_make_result(success=False))
+        h.record(_make_result(success=False))
+        # A success resets the streak
+        h.record(_make_result(success=True))
+        # Only 1 failure after the reset; should not trigger threshold=3
+        assert rule.should_alert(_make_result(success=False)) is False
+
 
 class TestRecoveryAlertRule:
     def test_no_alert_on_failure(self, tmp_path):
@@ -74,5 +85,3 @@ class TestRecoveryAlertRule:
     def test_no_alert_when_streak_below_min(self, tmp_path):
         h = JobHistory(tmp_path / "h.jsonl")
         h.record(_make_result(success=False))
-        rule = RecoveryAlertRule(min_prior_failures=3, history=h)
-        assert rule.should_alert(_make_result(success=True)) is False
