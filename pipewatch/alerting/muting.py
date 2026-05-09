@@ -31,6 +31,15 @@ class MuteList:
         """Register a new mute rule."""
         self._rules.append(rule)
 
+    def remove(self, pattern: str) -> bool:
+        """Remove all rules with the given pattern.
+
+        Returns True if at least one rule was removed, False otherwise.
+        """
+        before = len(self._rules)
+        self._rules = [r for r in self._rules if r.pattern != pattern]
+        return len(self._rules) < before
+
     def is_muted(self, result: JobResult) -> bool:
         """Return True if any rule matches the given result."""
         return any(rule.matches(result) for rule in self._rules)
